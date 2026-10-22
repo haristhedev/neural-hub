@@ -1,0 +1,31 @@
+{
+  "name": "@neuralhub/contracts",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "chain": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "export-abis": "tsx scripts/export-abis.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'no lint step for contracts'",
+    "fund": "hardhat run scripts/fund.ts --network localhost"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.1.3",
+    "@nomicfoundation/hardhat-network-helpers": "^1.1.2",
+    "@nomicfoundation/hardhat-toolbox": "^6",
+    "@openzeppelin/contracts": "^5.1",
+    "@types/chai": "^4",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.7.5",
+    "chai": "^4",
+    "ethers": "^6",
+    "hardhat": "^2.26",
+    "solc": "0.8.28",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.8.3"
+  }
+}

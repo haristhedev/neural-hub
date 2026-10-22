@@ -1,0 +1,28 @@
+{
+  "name": "neuralhub",
+  "private": true,
+  "version": "0.1.0",
+  "description": "NeuralHub \u2014 decentralized AI model marketplace (Web3 frontend showcase)",
+  "scripts": {
+    "chain": "pnpm --filter @neuralhub/contracts chain",
+    "deploy:local": "pnpm --filter @neuralhub/contracts deploy:local",
+    "test:contracts": "pnpm --filter @neuralhub/contracts test",
+    "dev": "pnpm --filter @neuralhub/web dev",
+    "build": "pnpm --filter @neuralhub/web build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test:e2e": "pnpm --filter @neuralhub/web test:e2e",
+    "fund": "pnpm --filter @neuralhub/contracts fund"
+  },
+  "packageManager": "pnpm@10.0.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "keccak",
+      "secp256k1",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}
