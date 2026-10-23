@@ -1,0 +1,65 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/archivo";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
+@theme {
+  --color-bg: #06070d;
+  --color-bg-raised: #0b0d16;
+  --color-surface: #11131f;
+  --color-surface-2: #171a29;
+  --color-line: #232740;
+  --color-line-soft: #1a1d31;
+  --color-ink: #f4f5fb;
+  --color-ink-dim: #9aa0b8;
+  --color-ink-faint: #5d6380;
+  --color-accent: #8b5cf6;
+  --color-accent-hi: #a78bfa;
+  --color-accent-lo: #2a1f55;
+  --color-ok: #10b981;
+  --color-warn: #f59e0b;
+  --color-bad: #ef4444;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-display: "Archivo Variable", "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root { color-scheme: dark; }
+html { background: var(--color-bg); }
+body {
+  background:
+    radial-gradient(1200px 500px at 50% -120px, rgba(139, 92, 246, 0.14), transparent 70%),
+    var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+::selection { background: rgba(139, 92, 246, 0.45); }
+
+:focus-visible { outline: 2px solid var(--color-accent-hi); outline-offset: 2px; border-radius: 6px; }
+
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-faint);
+}
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* GSAP-driven elements start hidden only when JS + motion are available (see Reveal) */
+.js-motion [data-reveal] { opacity: 0; transform: translateY(18px); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  .js-motion [data-reveal] { opacity: 1; transform: none; }
+}
+
+.scroll-thin::-webkit-scrollbar { height: 6px; width: 6px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 99px; }
+
+.motion-failsafe [data-reveal] { opacity: 1 !important; transform: none !important; visibility: visible !important; }
