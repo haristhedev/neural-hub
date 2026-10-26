@@ -13,7 +13,9 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test:e2e": "pnpm --filter @neuralhub/web test:e2e",
-    "fund": "pnpm --filter @neuralhub/contracts fund"
+    "fund": "pnpm --filter @neuralhub/contracts fund",
+    "demo:record": "pnpm --filter @neuralhub/web demo:record",
+    "demo:gifs": "bash docs/make-gifs.sh"
   },
   "packageManager": "pnpm@10.0.0",
   "pnpm": {
