@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { Flip, gsap, motion } from "@/lib/motion/gsap";
+import { Flip, gsap } from "@/lib/motion/gsap";
 import { Skeleton, EmptyState } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
@@ -57,9 +57,18 @@ export function Explore() {
     return c;
   }, [views]);
 
-  /** Capture card positions *before* React re-renders with the new filter, then FLIP to the new layout. */
+  /**
+   * Capture card positions *before* React re-renders with the new filter, then FLIP to the new layout.
+   * Any Flip still running is completed first so the captured state (and the next layout) starts from rest.
+   */
+  const captureFlip = () => {
+    if (!grid.current) return;
+    const cards = grid.current.querySelectorAll("[data-flip-card]");
+    Flip.killFlipsOf(cards, true);
+    flipState.current = Flip.getState(cards);
+  };
   const update = (patch: Partial<ExploreFilters>) => {
-    if (grid.current) flipState.current = Flip.getState(grid.current.querySelectorAll("[data-flip-card]"));
+    captureFlip();
     setFilters(patch);
   };
 
@@ -67,14 +76,14 @@ export function Explore() {
     const state = flipState.current;
     if (!state || !grid.current) return;
     flipState.current = null;
-    const mm = motion(() => {
-      Flip.from(state, {
-        duration: 0.6, ease: "power3.inOut", absolute: true, stagger: 0.025, scale: false,
-        onEnter: (els) => gsap.fromTo(els, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5, delay: 0.15 }),
-        onLeave: (els) => gsap.to(els, { opacity: 0, scale: 0.9, duration: 0.3 }),
-      });
+    // Not wrapped in motion(): its matchMedia context would revert a *finished* Flip on the next filter change,
+    // putting the cards back at their pre-Flip offsets as the baseline for the following Flip (cards stranded off-grid).
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return; // same reduced-motion contract as motion()
+    Flip.from(state, {
+      duration: 0.6, ease: "power3.inOut", absolute: true, stagger: 0.025, scale: false,
+      onEnter: (els) => gsap.fromTo(els, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5, delay: 0.15 }),
+      onLeave: (els) => gsap.to(els, { opacity: 0, scale: 0.9, duration: 0.3 }),
     });
-    return () => mm.revert();
   }, [filters, licensed]);
 
   const shownCount = visible.size;
@@ -100,7 +109,7 @@ export function Explore() {
           <input type="checkbox" checked={filters.licensedOnly} disabled={!address} onChange={(e) => update({ licensedOnly: e.target.checked })} className="h-4 w-4 accent-[#8b5cf6]" />
           Only models I hold a license for {!address && <span className="text-xs text-ink-faint">(connect wallet)</span>}
         </label>
-        <Button variant="ghost" size="sm" onClick={() => { if (grid.current) flipState.current = Flip.getState(grid.current.querySelectorAll("[data-flip-card]")); resetFilters(); }}>Reset filters</Button>
+        <Button variant="ghost" size="sm" onClick={() => { captureFlip(); resetFilters(); }}>Reset filters</Button>
       </aside>
 
       <section aria-live="polite">

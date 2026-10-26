@@ -11,6 +11,19 @@ test.describe("marketplace flows (real local chain, mock wallet)", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Aura-Llama");
   });
 
+  test("explore: chaining filter and sort changes leaves the cards on the grid", async ({ page }) => {
+    await page.goto("/explore");
+    await expect(page.getByText("Aura-Llama-70B-Decentral").first()).toBeVisible();
+    await page.getByRole("button", { name: /^Image Generation/ }).click();
+    await expect(page.getByText(/showing 2 of 7/i)).toBeVisible();
+    await page.getByRole("button", { name: /^All models/ }).click();
+    await page.locator("select").selectOption("price-desc");
+    // regression: a finished Flip used to be reverted on the next change, stranding cards at their pre-Flip offsets
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+    await expect.poll(() => page.evaluate(() => [...document.querySelectorAll<HTMLElement>("[data-flip-card]")].every((c) => !/translate\(/.test(c.style.transform)))).toBe(true);
+    await expect(page.locator("[data-flip-card]").first()).toContainText("PredictNet-Financial-v2"); // most expensive first
+  });
+
   test("connect wallet → faucet → buy license with permit → deposit credits → metered inference", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
