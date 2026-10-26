@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck · lint · unit · contracts · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test:contracts
+      - run: pnpm --filter @neuralhub/web test
+      - run: pnpm build
+
+  e2e:
+    name: E2E (local chain + mock wallet)
+    runs-on: ubuntu-latest
+    needs: checks
+    env:
+      NEXT_PUBLIC_ENABLED_CHAINS: "31337"
+      NEXT_PUBLIC_DEFAULT_CHAIN: "31337"
+      NEXT_PUBLIC_RPC_31337: http://127.0.0.1:8545
+      SESSION_SECRET: ci-only-session-secret-0123456789abcdef
+      # Hardhat account #1 — a publicly known test key that only exists on the local CI chain
+      GATEWAY_PRIVATE_KEY: "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Start local chain
+        run: |
+          pnpm chain > chain.log 2>&1 &
+          npx --yes wait-on -t 60000 tcp:127.0.0.1:8545
+      - name: Deploy and seed contracts
+        run: pnpm deploy:local
+      - name: Build and start the app
+        run: |
+          pnpm build
+          pnpm --filter @neuralhub/web start > web.log 2>&1 &
+          npx --yes wait-on -t 60000 http://localhost:3000
+      - run: pnpm --filter @neuralhub/web exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            web/test-results
+            chain.log
+            web.log
