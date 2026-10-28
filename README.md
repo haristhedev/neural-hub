@@ -99,7 +99,42 @@ pnpm build && SESSION_SECRET=$(openssl rand -hex 32) pnpm --filter @neuralhub/we
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, contract + unit tests and a production build on every push, then boots a Hardhat node, deploys, starts the app and runs the Playwright suite.
 
-Tests: `pnpm test:contracts` (23) · `pnpm --filter @neuralhub/web test` (37 unit) · `pnpm test:e2e` (5 browser tests against the real local chain; needs the chain, deployment and app running; set `CHROMIUM_PATH` to use a preinstalled Chromium) · `pnpm typecheck` · `pnpm lint`.
+Tests: `pnpm test:contracts` (23) · `pnpm --filter @neuralhub/web test` (37 unit) · `pnpm test:e2e` (5 browser tests against the real local chain; needs the chain, deployment and app running; set `CHROMIUM_PATH` to use a preinstalled Chromium) · `pnpm typecheck` · `pnpm lint` · `pnpm smoke` (HTTP checks against a running instance, local or hosted).
+
+## Deploy a live demo (Base Sepolia)
+
+The app runs against any chain listed in `web/src/lib/web3/deployments/all.json`. To host it for others, deploy the contracts to a public testnet, then host the web app. **Base Sepolia is the recommended target**: gas there costs a fraction of a cent, so the full seed (7 models, purchases and metered usage) is practically free. On Ethereum Sepolia the same seed needs far more testnet ETH.
+
+**You need:** a throwaway deployer key and a second throwaway **gateway** key (never reuse a key that holds real funds), a little Base Sepolia ETH on both (any faucet; the deploy script checks the deployer's balance up front and prints how much it needs, and unused gas is swept back to the deployer after seeding), and a host for the Next.js app (Vercel works; set the project's *Root Directory* to `web`).
+
+```bash
+# 1. Deploy + seed. GATEWAY_ADDRESS is the address of the gateway key; it signs metered-usage transactions
+export DEPLOYER_KEY=0x…  GATEWAY_ADDRESS=0x…
+SEED=1 pnpm --filter @neuralhub/contracts deploy:testnet --network baseSepolia   # fails fast, before deploying, if the deployer is underfunded
+
+# 2. Verify the on-chain state matches what the frontend will read
+pnpm --filter @neuralhub/contracts verify:deployment --network baseSepolia
+
+# 3. Commit the new addresses: the frontend bundles deployments/all.json at build time
+git add web/src/lib/web3/deployments/all.json && git commit -m "chore: Base Sepolia deployment" && git push
+
+# 4. Host the web app with these environment variables (NEXT_PUBLIC_* are read at build time)
+#    NEXT_PUBLIC_ENABLED_CHAINS=84532      NEXT_PUBLIC_DEFAULT_CHAIN=84532
+#    NEXT_PUBLIC_RPC_84532=<your RPC URL>  (optional; the public RPC is rate limited)
+#    SESSION_SECRET=$(openssl rand -hex 32)
+#    GATEWAY_PRIVATE_KEY=<the gateway key>  (must hold a little Base Sepolia ETH: it pays gas for every metered call)
+#    NEXT_PUBLIC_WC_PROJECT_ID=<optional, enables WalletConnect>
+
+# 5. Point the ERC-1155 metadata at the hosted site (the URL only exists after step 4)
+LICENSE_URI='https://<your-app>/api/licenses/{id}.json' pnpm --filter @neuralhub/contracts set-license-uri --network baseSepolia
+
+# 6. Smoke-test the hosted app and the RPC
+pnpm smoke --url https://<your-app> --rpc https://sepolia.base.org --chain-id 84532
+```
+
+Then do one manual pass with a real wallet on Base Sepolia: connect, claim the faucet, buy a license, deposit credits, run a metered call. The history on a live chain starts "now", so dashboards fill in as people use the demo (the local chain replays six months instead).
+
+Notes: the rate limiter and gateway nonce queue are in-memory, which is fine for a demo on one instance; use Redis and a real queue before scaling horizontally. If the app is configured for a chain with no entry in `all.json`, it shows a "contracts are not deployed on this network yet" banner instead of failing.
 
 ## Re-record the GIFs
 
