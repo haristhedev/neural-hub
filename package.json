@@ -15,7 +15,8 @@
     "test:e2e": "pnpm --filter @neuralhub/web test:e2e",
     "fund": "pnpm --filter @neuralhub/contracts fund",
     "demo:record": "pnpm --filter @neuralhub/web demo:record",
-    "demo:gifs": "bash docs/make-gifs.sh"
+    "demo:gifs": "bash docs/make-gifs.sh",
+    "smoke": "node scripts/smoke.mjs"
   },
   "packageManager": "pnpm@10.0.0",
   "pnpm": {
