@@ -10,7 +10,10 @@
     "export-abis": "tsx scripts/export-abis.ts",
     "typecheck": "hardhat compile --quiet && tsc --noEmit",
     "lint": "echo 'no lint step for contracts'",
-    "fund": "hardhat run scripts/fund.ts --network localhost"
+    "fund": "hardhat run scripts/fund.ts --network localhost",
+    "verify:deployment": "hardhat run scripts/check-deployment.ts",
+    "set-license-uri": "hardhat run scripts/set-license-uri.ts",
+    "deploy:testnet": "hardhat run scripts/deploy.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.1.3",

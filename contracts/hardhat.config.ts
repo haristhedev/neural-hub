@@ -29,7 +29,8 @@ const config: HardhatUserConfig = {
   networks: {
     // Genesis is back-dated so scripts/deploy.ts can replay ~6 months of activity and
     // still finish at "now" — gives the dashboards real historical on-chain data.
-    hardhat: { chainId: 31337, initialDate: new Date(Date.now() - 185 * 24 * 3600 * 1000).toISOString() },
+    // REAL_TIME=1 starts the chain at the current time instead (used to test the live-network seed path locally).
+    hardhat: { chainId: 31337, ...(process.env.REAL_TIME ? {} : { initialDate: new Date(Date.now() - 185 * 24 * 3600 * 1000).toISOString() }) },
     localhost: { url: "http://127.0.0.1:8545", chainId: 31337 },
     ...(process.env.DEPLOYER_KEY
       ? {
